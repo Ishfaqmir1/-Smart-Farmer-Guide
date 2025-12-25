@@ -1,6 +1,22 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import Footer from "./components/Footer";
+
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Profile from "./components/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthProvider from "./context/AuthContext";
+
+// HOME PAGE UI component
+import Home from "./pages/Home";
+import Services from "./pages/Services";
+import ServiceDetail from "./pages/ServiceDetail";
+
+
+// Chart
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,12 +26,11 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const API_KEY = import.meta.env.VITE_WEATHER_KEY;
 
-/* ================= HELPERS ================= */
+// helpers
 const getDayName = (date) =>
   new Date(date).toLocaleDateString("en-US", { weekday: "short" });
 
@@ -40,7 +55,9 @@ function App() {
   const [selectedHourly, setSelectedHourly] = useState([]);
   const [soil, setSoil] = useState(null);
   const [animate, setAnimate] = useState(false);
+  const [showSpray, setShowSpray] = useState(false);
 
+  // LOCATION + WEATHER
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => loadAll(pos.coords.latitude, pos.coords.longitude),
@@ -57,6 +74,7 @@ function App() {
     const current = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
     ).then((r) => r.json());
+
     setLocation(current);
 
     const forecast = await fetch(
@@ -71,10 +89,12 @@ function App() {
       humidity: h.main.humidity,
       rain: h.rain?.["3h"] || 0,
       pop: Math.round((h.pop || 0) * 100),
+      wind: h.wind?.speed || 0,
     }));
 
     setHourly(h12);
     setSelectedHourly(h12);
+
     setSoil({
       value: estimateSoil(h12[0].temp, h12[0].humidity, h12[0].rain),
     });
@@ -93,67 +113,62 @@ function App() {
           date: d,
           max: Math.max(...byDate[d].map((i) => i.main.temp_max)),
           min: Math.min(...byDate[d].map((i) => i.main.temp_min)),
-          rain: byDate[d].reduce(
-            (s, i) => s + (i.rain?.["3h"] || 0),
-            0
-          ),
+          rain: byDate[d].reduce((s, i) => s + (i.rain?.["3h"] || 0), 0),
         }))
     );
   };
 
   if (!location || !soil) return <h2 className="loading">Loading…</h2>;
 
-  /*ADVISORY ENGINE  */
+  // advisory engine
   const todayRain = daily[0]?.rain || 0;
   const humidity = hourly[0]?.humidity || 0;
   const wetDays = daily.slice(0, 5).filter((d) => d.rain > 2).length;
-  const month = new Date().getMonth(); // 0–11
 
-  /*  ORCHARD OPERATIONS*/
-  let orchard = "pruning is advised to maintain tree health and breakage due to snow";
-  if (month <= 1)
-    orchard = "🍎 Dormancy period → No irrigation / no fertilizer";
-  else if (month === 1 || month === 2)
-    orchard = "✂️ Pruning recommended for apple trees";
-  else if (month === 2 || month === 3)
-    orchard = "🌱 Grafting / budding suitable period";
-  else if (month >= 3 && month <= 5)
-    orchard = "🌸 Flowering → Avoid pesticide spray";
-  else if (month >= 6 && month <= 8)
-    orchard = "🍎 Fruit development → Monitor pests & moisture";
+  const wind = hourly[0]?.wind || 0;
+  const month = new Date().getMonth();
 
-  /*DISEASE & PESTICIDE  */
-  let disease = "Low disease risk";
-  let pesticide = "No spray required";
+  let windAdvice = "";
+  if (wind > 25) windAdvice = "🌬️ Strong wind — avoid spraying";
+  else if (wind > 14) windAdvice = "💨 Moderate wind — caution";
+
+  let orchard = "pruning is advised to maintain tree health";
+  if (month <= 1) orchard = "🍎 Dormancy — no irrigation";
+  else if (month === 1 || month === 2) orchard = "✂️ Pruning season";
+  else if (month === 2 || month === 3) orchard = "🌱 Grafting period";
+  else if (month >= 3 && month <= 5) orchard = "🌸 Flowering — avoid spray";
+  else if (month >= 6 && month <= 8) orchard = "🍎 Fruit development";
+
+  let disease = "Low Risk";
+  let diseaseColor = "green";
 
   if (wetDays >= 3 && humidity > 80) {
-    disease = "Apple Scab / Powdery Mildew";
-    pesticide =
-      "Fungicide: Mancozeb or Carbendazim (spray only in dry window)";
+    disease = "Fungal Risk: Scab/Mildew";
+    diseaseColor = "orange";
+  }
+  if (todayRain > 6) {
+    disease = "Spray not advised";
+    diseaseColor = "red";
   }
 
-  /*  MAIN ADVISORY  */
-  let advisoryText = "✂️ Pruning recommended for traditional/high density apple trees";
+  let advisoryText = "✂️ Pruning recommended";
   let advisoryClass = "good";
-  let advisoryIcon = "✅";
+  let advisoryIcon = "✂️";
 
   if (todayRain > 5) {
-    advisoryText =
-      "Rain expected → Do NOT spray pesticides or irrigate";
+    advisoryText = "Rain expected — avoid spraying";
     advisoryClass = "danger";
     advisoryIcon = "🌧️";
   } else if (wetDays >= 3 && humidity > 80) {
-    advisoryText =
-      "Continuous wet spell → High fungal disease risk in apple orchards";
+    advisoryText = "Wet spell — fungal disease risk";
     advisoryClass = "warning";
     advisoryIcon = "🍎";
   } else if (soil.value < 0.18) {
-    advisoryText = "Low soil moisture → Irrigation required";
+    advisoryText = "Low soil moisture — irrigation needed";
     advisoryClass = "info";
     advisoryIcon = "💧";
   }
 
-  /*  CHART */
   const chartData = {
     labels: selectedHourly.map((h) => formatTimeAMPM(h.time)),
     datasets: [
@@ -182,6 +197,7 @@ function App() {
             temp: h.main.temp,
             humidity: h.main.humidity,
             pop: Math.round((h.pop || 0) * 100),
+            wind: h.wind?.speed || 0,
           }))
       );
       setAnimate(true);
@@ -189,81 +205,59 @@ function App() {
   };
 
   return (
-    <div className="app">
-      {/* HEADER */}
-      <header className="header motion">
-        <h1>🌾 Smart Farmer Guide 🍎</h1>
-        <h3>“Grow smarter. Farm better. Harvest more.”</h3>
-        <p>
-          A smart agriculture decision-support system combining weather,
-          soil moisture estimation, orchard operations, and disease
-          advisories for farmers.
-        </p>
-      </header>
+        <Router>
+      <AuthProvider>
+        <Navbar />
 
-      <div className="container">
-        {/* LEFT */}
-        <div className="left">
-          <div className="panel current motion">
-            <h2>🌤 Current Weather</h2>
-            <h1>{Math.round(location.main.temp)}°C</h1>
-            <p>{location.weather[0].description}</p>
-            <p>📍 {location.name}</p>
-          </div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                location={location}
+                wind={wind}
+                advisoryClass={advisoryClass}
+                advisoryIcon={advisoryIcon}
+                advisoryText={advisoryText}
+                windAdvice={windAdvice}
+                orchard={orchard}
+                disease={disease}
+                diseaseColor={diseaseColor}
+                showSpray={showSpray}
+                setShowSpray={setShowSpray}
+                daily={daily}
+                getDayName={getDayName}
+                getWeatherIcon={getWeatherIcon}
+                onDayClick={onDayClick}
+                animate={animate}
+                selectedHourly={selectedHourly}
+                formatTimeAMPM={formatTimeAMPM}
+                Bar={Bar}
+                chartData={chartData}
+              />
+                
+            }
+          />
+            
+<Route path="/services" element={<Services />} />
+<Route path="/services/:slug" element={<ServiceDetail />} />
 
-          <div className={`advisory-card motion ${advisoryClass}`}>
-            <div className="advisory-icon">{advisoryIcon}</div>
-            <div>
-              <h3>Farm Advisory</h3>
-              <p>{advisoryText}</p>
-            </div>
-          </div>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-          <div className="panel motion">
-            <h3>🌳 Orchard Operations (Apple)</h3>
-            <p>{orchard}</p>
-            <p>🦠 Disease: {disease}</p>
-            <p>🧪 Pesticide: {pesticide}</p>
-          </div>
-        </div>
-
-        {/* RIGHT */}
-        <div className="right">
-          <h2>📅 7-Day Forecast</h2>
-          <div className="forecast">
-            {daily.map((d, i) => (
-              <div
-                key={i}
-                className="forecast-card motion"
-                onClick={() => onDayClick(d.date)}
-              >
-                <h4>{getDayName(d.date)}</h4>
-                <span className="icon">
-                  {getWeatherIcon(d.rain, d.max)}
-                </span>
-                <p>⬆ {d.max.toFixed(1)}°C</p>
-                <p>⬇ {d.min.toFixed(1)}°C</p>
-              </div>
-            ))}
-          </div>
-
-          <div className={`hourly ${animate ? "show" : ""}`}>
-            {selectedHourly.map((h, i) => (
-              <div key={i} className="hour-card motion">
-                <p>{formatTimeAMPM(h.time)}</p>
-                <p>🌡 {h.temp}°C</p>
-                <p>💧 {h.humidity}%</p>
-                <p>🌧 {h.pop}% chance</p>
-              </div>
-            ))}
-          </div>
-
-          <h2>📊 Temperature & Soil Moisture</h2>
-          <Bar data={chartData} />
-        <Footer />
-        </div>
-      </div>
-    </div>
+          {/* PROTECTED */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
+ 
   );
 }
 

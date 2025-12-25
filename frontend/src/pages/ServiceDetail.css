@@ -1,0 +1,78 @@
+/* ======================================================
+   SERVICE DETAIL PAGE
+====================================================== */
+.service-detail-page {
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.service-detail-card {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(145deg, #020617, #0f172a);
+  padding: 36px 28px;
+  border-radius: 22px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  animation: slideFade 0.6s ease;
+}
+
+/* ICON */
+.detail-icon {
+  font-size: 56px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+/* TEXT */
+.service-detail-card h1 {
+  font-size: 30px;
+  margin-bottom: 12px;
+  color: #38bdf8;
+}
+
+.detail-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #94a3b8;
+  margin-bottom: 18px;
+}
+
+/* LIST */
+.detail-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 22px;
+}
+
+.detail-list li {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #e5e7eb;
+}
+
+/* BUTTON */
+.detail-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 14px;
+  text-decoration: none;
+}
+.service-card {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+  .service-detail-card {
+    padding: 28px 20px;
+  }
+
+  .service-detail-card h1 {
+    font-size: 24px;
+  }
+}

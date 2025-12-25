@@ -1,0 +1,136 @@
+/* SECTION */
+.benefits-sec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  padding: 100px 10%;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  overflow: hidden;
+}
+
+/* LEFT */
+.benefits-left {
+  flex: 1;
+}
+
+/* TITLE */
+.benefits-title {
+  font-size: 36px;
+  margin-bottom: 40px;
+  color: #e5e7eb;
+}
+
+.benefits-title span {
+  color: #a78bfa;
+}
+
+/* BENEFIT CARD */
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  background: linear-gradient(145deg, #020617, #0f172a);
+  padding: 18px 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.benefit:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 45px rgba(167,139,250,0.3);
+}
+
+/* ICON */
+.benefit-icon {
+  font-size: 34px;
+  animation: floatIcon 4s ease-in-out infinite;
+}
+
+/* ICON COLORS */
+.weather { color: #38bdf8; }
+.money { color: #22c55e; }
+.leaf { color: #84cc16; }
+.water { color: #0ea5e9; }
+
+/* TEXT */
+.benefit h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #e5e7eb;
+}
+
+.benefit p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* RIGHT IMAGE */
+.benefits-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.benefits-right img {
+  width: 100%;
+  max-width: 420px;
+  animation: floatImage 6s ease-in-out infinite;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+}
+
+/* FLOATING ICON ANIMATION */
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes floatImage {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* FADE + SLIDE */
+.fade-slide-left {
+  animation: fadeSlideLeft 1s ease forwards;
+}
+
+.fade-slide-right {
+  animation: fadeSlideRight 1s ease forwards;
+}
+
+@keyframes fadeSlideLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeSlideRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* STAGGER DELAY */
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+.delay-3 { animation-delay: 0.6s; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .benefits-sec {
+    flex-direction: column;
+    padding: 70px 6%;
+  }
+
+  .benefits-title {
+    font-size: 28px;
+    text-align: center;
+  }
+
+  .benefits-right img {
+    max-width: 320px;
+  }
+}
