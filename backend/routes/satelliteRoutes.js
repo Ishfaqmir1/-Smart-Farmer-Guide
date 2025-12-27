@@ -1,34 +1,36 @@
 import express from "express";
-import { searchPlanetImages } from "../services/planetService.js";
+import protect from "../middleware/authMiddleware.js";
+import { getNDVI } from "../services/sentinelService.js";
 
 const router = express.Router();
 
 /* ==============================
-   POST /api/satellite/search
+   POST /api/satellite/ndvi
+   Calculates NDVI for AOI
 ============================== */
-router.post("/search", async (req, res) => {
+router.post("/ndvi", protect, async (req, res) => {
   try {
-    const { aoi, from, to } = req.body;
+    const { aoi } = req.body;
 
-    if (!aoi || aoi.length < 3) {
-      return res.status(400).json({ error: "Invalid AOI polygon" });
+    if (!aoi || aoi.type !== "Polygon") {
+      return res.status(400).json({ error: "Invalid AOI geometry" });
     }
 
-    const images = await searchPlanetImages(
-      aoi,
-      from || "2025-01-01T00:00:00Z",
-      to || new Date().toISOString()
-    );
+    const ndvi = await getNDVI(aoi);
 
     res.json({
       success: true,
-      count: images.length,
-      images
+      ndvi: Number(ndvi.toFixed(2)),
+      status:
+        ndvi > 0.6
+          ? "Healthy"
+          : ndvi > 0.4
+          ? "Moderate"
+          : "Poor"
     });
-
   } catch (err) {
-    console.error("PLANET SEARCH ERROR:", err.message);
-    res.status(500).json({ error: "Planet search failed" });
+    console.error("SENTINEL NDVI ERROR:", err.message);
+    res.status(500).json({ error: "NDVI processing failed" });
   }
 });
 

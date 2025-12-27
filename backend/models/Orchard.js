@@ -15,16 +15,18 @@ const orchardSchema = new mongoose.Schema(
     },
 
     aoi: {
-      type: Object, // GeoJSON geometry
+      type: Object, // GeoJSON geometry (Polygon)
       required: true,
     },
 
     ndvi: {
-      type: Number,
+      type: Number, // Real NDVI value from Sentinel Hub
       default: null,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export default mongoose.model("Orchard", orchardSchema);
